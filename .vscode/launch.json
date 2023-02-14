@@ -1,0 +1,23 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "outputCapture": "std",
+            "type": "node",
+            "request": "launch",
+            "name": "todo-app",
+            "skipFiles": ["<node_internals>/**"],
+            "program": "${workspaceRoot}/src/index.ts",
+            "preLaunchTask": "Compile Typescript",
+            "autoAttachChildProcesses": true,
+            "envFile": "${workspaceFolder}/.env",
+            "console": "internalConsole",
+            "sourceMaps": true,
+            "outFiles": [
+                "${workspaceRoot}/dist/**/*.js",
+                "!**/node_modules/**"
+            ]
+        }
+    ],
+    "compounds": []
+}
