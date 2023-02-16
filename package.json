@@ -1,16 +1,16 @@
 {
     "name": "todo-app",
     "version": "1.0.0",
-    "description": "",
-    "main": "index.js",
-    "ts-module": "src/index.ts",
+    "main": "dist/index.js",
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "start": "npx electron dist"
     },
     "devDependencies": {
         "@types/node": "^18.13.0",
         "@typescript-eslint/eslint-plugin": "^5.51.0",
         "@typescript-eslint/parser": "^5.51.0",
+        "electron": "^23.0.0",
         "eslint": "^8.34.0",
         "eslint-config-prettier": "^8.6.0",
         "eslint-import-resolver-typescript": "^3.5.3",
