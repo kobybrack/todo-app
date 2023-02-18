@@ -1,11 +1,12 @@
+import { v4 as uuid } from 'uuid';
 export class Todo {
-    private isSubtask: boolean;
-    private completed: boolean;
-    private description: string;
+    public isSubtask: boolean;
+    public description: string;
+    public id: string;
 
     constructor(description: string) {
         this.isSubtask = false;
-        this.completed = false;
         this.description = description;
+        this.id = uuid();
     }
 }

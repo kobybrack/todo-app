@@ -1,27 +1,42 @@
-import { Todo } from "./Todo";
-import { readFileSync } from "fs"; 
-
+import { Todo } from './Todo';
 export class TodoList {
     private todos: Todo[];
+    // private readonly todosPath: string;
 
-    constructor(filePath: any) {
-        if (filePath === null) {
-            this.todos = [];
-        } else if (typeof filePath === 'string') {
-            const fileBuffer = readFileSync(filePath)
-            const fileString = fileBuffer.toString('utf-8');
-            this.todos = JSON.parse(fileString);
-        } else {
-            throw new Error("not a valid todo file");
-        }
+    constructor(appDataPath: string) {
+        // initialize with todos or empty array
+        // this.todosPath = appDataPath + '/todo-app' + '/todos.json';
+        // try {
+        //     const fileData = fs.readFileSync(appDataPath + '/todo-app' + '/todos.json', 'utf8');
+        // } catch (error: any) {
+        //     if (error.code !== 'ENOENT') {
+        //         throw error;
+        //     }
+        // }
+        this.todos = [];
     }
 
-    public addTodo(todo: Todo) {
-        this.todos.push(todo)
+    saveTodos() {
+        // save todos to JSON file
+        // fs.writeFileSync(this.appDataPath + 'todos.json', JSON.stringify(this.todos));
+        // // returning 'this' allows method chaining
+        return this;
     }
 
-    public removeTodo(todo: Todo) {
-        const index = this.todos.indexOf(todo);
-        this.todos.splice(index, 1);
+    getTodos() {
+        return this.todos;
+    }
+
+    addTodo(todoDescription: string) {
+        // merge the existing todos with the new todo
+        const todo = new Todo(todoDescription);
+        this.todos.push(todo);
+        return this.saveTodos();
+    }
+
+    deleteTodo(todo: Todo) {
+        // filter out the target todo
+        this.todos = this.todos.filter((t) => t !== todo);
+        return this.saveTodos();
     }
 }
