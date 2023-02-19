@@ -16,27 +16,27 @@ export class TodoList {
         this.todos = [];
     }
 
-    saveTodos() {
-        // save todos to JSON file
-        // fs.writeFileSync(this.appDataPath + 'todos.json', JSON.stringify(this.todos));
-        // // returning 'this' allows method chaining
-        return this;
+    toggleSubtask(todoId: string) {
+        for (const todo of this.todos) {
+            if (todo.id === todoId) {
+                todo.isSubtask = !todo.isSubtask;
+                return;
+            }
+        }
     }
 
     getTodos() {
         return this.todos;
     }
 
-    addTodo(todoDescription: string) {
+    addTodo(todoOptions: any) {
         // merge the existing todos with the new todo
-        const todo = new Todo(todoDescription);
+        const todo = new Todo(todoOptions);
         this.todos.push(todo);
-        return this.saveTodos();
     }
 
-    deleteTodo(todo: Todo) {
+    removeTodo(todoId: string) {
         // filter out the target todo
-        this.todos = this.todos.filter((t) => t !== todo);
-        return this.saveTodos();
+        this.todos = this.todos.filter((todo) => todo.id !== todoId);
     }
 }

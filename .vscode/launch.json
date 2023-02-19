@@ -31,7 +31,7 @@
             "name": "Electron: Renderer",
             "type": "chrome",                 //use the Chrome debugger that comes with VS Code
             "request": "attach",
-            "port": 5858,                     //use debug port opened in Electron: Main configuration
+            "port": 9223,                     //use debug port opened in Electron: Main configuration
             "webRoot": "${workspaceFolder}",
             "timeout": 30000
         }
@@ -42,7 +42,8 @@
             "configurations": [
                 "Electron: Main",
                 "Electron: Renderer"
-            ]
+            ],
+            "stopAll": true
         }
     ]
 }

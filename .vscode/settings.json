@@ -13,6 +13,7 @@
         "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
     "cSpell.words": [
+        "subtasktrue",
         "todos"
     ]
 }

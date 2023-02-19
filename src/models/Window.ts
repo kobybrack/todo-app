@@ -7,6 +7,7 @@ const defaultProps = {
     width: 750,
     height: 750,
     show: false,
+    autoHideMenuBar: true,
 
     webPreferences: {
         nodeIntegration: true,
@@ -15,9 +16,9 @@ const defaultProps = {
 };
 
 export class Window extends BrowserWindow {
-    constructor({ file, ...windowSettings }: any) {
+    constructor(file: string) {
         // calls new BrowserWindow with these props
-        super({ ...defaultProps, ...windowSettings });
+        super({ ...defaultProps });
 
         this.loadFile(file);
         // this.webContents.openDevTools();

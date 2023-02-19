@@ -4,9 +4,9 @@ export class Todo {
     public description: string;
     public id: string;
 
-    constructor(description: string) {
-        this.isSubtask = false;
-        this.description = description;
+    constructor(options: any) {
+        this.isSubtask = options.isSubtask;
+        this.description = options.todoDescription;
         this.id = uuid();
     }
 }
