@@ -1,5 +1,6 @@
-const { ipcRenderer } = require('electron');
+import { ipcRenderer } from 'electron';
 import $ from 'jquery';
+import { Todo } from './models/Todo';
 
 const createTodo = (event: KeyboardEvent) => {
     if (event.code === '13' && !event.shiftKey) {
@@ -19,47 +20,24 @@ const createTodo = (event: KeyboardEvent) => {
     }
 };
 
-const removeTodo = (element: HTMLLIElement) => {
-    const todoId = element.id;
-    ipcRenderer.send('remove-todo', todoId);
-};
-
-const toggleSubtask = (element: HTMLLIElement) => {
-    const todoId = element.id;
-    ipcRenderer.send('mark-subtask', todoId);
-};
-
 $('#new-todo-entry').on('keydown', createTodo);
 
 // on receive todos
 ipcRenderer.on('todos', (_event, todos) => {
     // get the todoList ul
-    const todoList = document.getElementById('todoList');
-    if (!todoList) {
-        throw new Error('todoList is undefined/null!');
+    const newList = $('ul');
+    for (const todo of todos) {
+        const listElement = $('li', {
+            id: todo.id,
+            ondblclick: ipcRenderer.send('remove-todo', todo.id),
+            class: `subtask${todo.isSubtask}`,
+        });
+        const label = $(`label><input type="checkbox">${todo.description}</label>`);
+        const span = $(`<span class="close">x</span>`);
+        span.on('click', ipcRenderer.send('mark-subtask', todo.todoId));
+        listElement.append(label, span);
+        newList.append(listElement);
     }
 
-    // create html string
-    let todoItems = todos.reduce((html: string, todo: Todo) => {
-        const currentTodoList = $('#todoList');
-        $('');
-        // create html string
-        for (const todo of todos) {
-            $('li', {
-                id: todo.id,
-                ondblclick: toggleSubtask,
-                class: `subtask${todo.isSubtask}`,
-            });
-        }
-        html += `
-        <li id="${todo.id}" ondblclick="toggleSubtask(this)" class="subtask${todo.isSubtask}">
-            <label><input type="checkbox">${todo.description}</label> 
-            <span onclick="removeTodo(this.parentElement)" class="close">x</span>
-        </li>`;
-        return html;
-    }, '');
-    if (todoItems !== '') {
-        todoItems += '<br>';
-    }
-    document.replaceChild(todoList.parentElement, Node);
+    $('#todo-list').replaceWith(newList);
 });
