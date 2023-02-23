@@ -1,5 +1,5 @@
-import { ipcRenderer } from 'electron';
-import { Todo } from './models/Todo';
+const { ipcRenderer } = require('electron');
+import $ from 'jquery';
 
 const createTodo = (event: KeyboardEvent) => {
     if (event.code === '13' && !event.shiftKey) {
@@ -29,7 +29,7 @@ const toggleSubtask = (element: HTMLLIElement) => {
     ipcRenderer.send('mark-subtask', todoId);
 };
 
-document.getElementById('new-todo-entry')?.addEventListener('keydown', createTodo);
+$('#new-todo-entry').on('keydown', createTodo);
 
 // on receive todos
 ipcRenderer.on('todos', (_event, todos) => {
@@ -41,6 +41,16 @@ ipcRenderer.on('todos', (_event, todos) => {
 
     // create html string
     let todoItems = todos.reduce((html: string, todo: Todo) => {
+        const currentTodoList = $('#todoList');
+        $('');
+        // create html string
+        for (const todo of todos) {
+            $('li', {
+                id: todo.id,
+                ondblclick: toggleSubtask,
+                class: `subtask${todo.isSubtask}`,
+            });
+        }
         html += `
         <li id="${todo.id}" ondblclick="toggleSubtask(this)" class="subtask${todo.isSubtask}">
             <label><input type="checkbox">${todo.description}</label> 
@@ -51,5 +61,5 @@ ipcRenderer.on('todos', (_event, todos) => {
     if (todoItems !== '') {
         todoItems += '<br>';
     }
-    todoList.innerHTML = todoItems;
+    document.replaceChild(todoList.parentElement, Node);
 });
