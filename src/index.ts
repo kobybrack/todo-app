@@ -2,8 +2,8 @@ import { ipcRenderer } from 'electron';
 import $ from 'jquery';
 import { Todo } from './models/Todo';
 
-const createTodo = (event: KeyboardEvent) => {
-    if (event.code === '13' && !event.shiftKey) {
+const createTodo = (event: any) => {
+    if (event.code === 'Enter' && !event.shiftKey) {
         let todoDescription = (event.target as HTMLInputElement).value;
         if (todoDescription === '') {
             (document.activeElement as HTMLElement).blur();
@@ -25,19 +25,18 @@ $('#new-todo-entry').on('keydown', createTodo);
 // on receive todos
 ipcRenderer.on('todos', (_event, todos) => {
     // get the todoList ul
-    const newList = $('ul');
+    const newList = $('<ul>', { id: 'todo-list' });
     for (const todo of todos) {
-        const listElement = $('li', {
+        const listElement = $('<li>', {
             id: todo.id,
-            ondblclick: ipcRenderer.send('remove-todo', todo.id),
+            ondblclick: () => ipcRenderer.send('mark-subtask', todo.todoId),
             class: `subtask${todo.isSubtask}`,
         });
-        const label = $(`label><input type="checkbox">${todo.description}</label>`);
+        const label = $(`<label><input type="checkbox">${todo.description}</label>`);
         const span = $(`<span class="close">x</span>`);
-        span.on('click', ipcRenderer.send('mark-subtask', todo.todoId));
+        span.on('click', () => ipcRenderer.send('remove-todo', todo.id));
         listElement.append(label, span);
         newList.append(listElement);
     }
-
     $('#todo-list').replaceWith(newList);
 });

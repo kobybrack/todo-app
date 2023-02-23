@@ -21,7 +21,7 @@ export class Window extends BrowserWindow {
         super({ ...defaultProps });
 
         this.loadFile(file);
-        // this.webContents.openDevTools();
+        this.webContents.openDevTools();
 
         // gracefully show when ready to prevent flickering
         this.once('ready-to-show', () => {
