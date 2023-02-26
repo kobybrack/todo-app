@@ -1,9 +1,8 @@
 # TODOS
-* investigate making index.js a typescript file
-* add strikethrough for checkboxes
-* format add todo box, make it look nice
 * format checkboxes
 * format header
 * pick good font
+* delete subtasks on remove
+* check subtasks on check parent
 * drag to reorder!!!!!
 * save todo state in appdata after each update

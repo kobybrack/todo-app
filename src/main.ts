@@ -30,9 +30,15 @@ const main = () => {
         window.webContents.send('todos', todoList.getTodos());
     });
 
-    ipcMain.on('mark-subtask', (_event, todoId) => {
+    ipcMain.on('toggle-subtask', (_event, todoId) => {
         todoList.toggleSubtask(todoId);
-        console.log('marking subtask');
+        console.log('toggling subtask');
+        window.webContents.send('todos', todoList.getTodos());
+    });
+
+    ipcMain.on('toggle-completion', (_event, todoId) => {
+        todoList.toggleCompletion(todoId);
+        console.log('toggling completion');
         window.webContents.send('todos', todoList.getTodos());
     });
 };

@@ -10,10 +10,10 @@ const createTodo = (event: any) => {
             return;
         }
 
-        let isSubtask = false;
+        let isSubtask = '';
         if (todoDescription[0] === ';') {
             todoDescription = todoDescription.slice(1);
-            isSubtask = true;
+            isSubtask = 'subtask';
         }
         (event.target as HTMLInputElement).value = '';
         ipcRenderer.send('add-todo', { todoDescription, isSubtask });
@@ -23,19 +23,22 @@ const createTodo = (event: any) => {
 $('#new-todo-entry').on('keydown', createTodo);
 
 // on receive todos
-ipcRenderer.on('todos', (_event, todos) => {
+ipcRenderer.on('todos', (_event, todos: Todo[]) => {
     // get the todoList ul
     const newList = $('<ul>', { id: 'todo-list' });
     for (const todo of todos) {
         const listElement = $('<li>', {
             id: todo.id,
-            class: `subtask${todo.isSubtask}`,
+            class: `${todo.isSubtask}`,
         });
-        listElement.on('dblclick', () => ipcRenderer.send('mark-subtask', todo.id));
+        listElement.on('dblclick', (event) => {
+            if (event.target.localName !== 'input') ipcRenderer.send('toggle-subtask', todo.id);
+        });
 
-        const checkbox = $('<input type="checkbox"/>');
+        const checkbox = $(`<input type="checkbox" ${todo.isCompleted}/>`);
+        checkbox.on('click', () => ipcRenderer.send('toggle-completion', todo.id));
         const label = $(`<label>${todo.description}</label>`);
-        const span = $(`<span class="close">x</span>`);
+        const span = $(`<span class="close">X</span>`);
         span.on('click', () => ipcRenderer.send('remove-todo', todo.id));
 
         listElement.append(checkbox, label, span);

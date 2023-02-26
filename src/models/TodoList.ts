@@ -1,7 +1,6 @@
 import { Todo } from './Todo';
 export class TodoList {
     private todos: Todo[];
-    // private readonly todosPath: string;
 
     constructor(appDataPath: string) {
         // initialize with todos or empty array
@@ -16,26 +15,43 @@ export class TodoList {
         this.todos = [];
     }
 
-    toggleSubtask(todoId: string) {
+    public toggleSubtask(todoId: string) {
         for (const todo of this.todos) {
             if (todo.id === todoId) {
-                todo.isSubtask = !todo.isSubtask;
+                if (todo.isSubtask === '') {
+                    todo.isSubtask = 'subtask';
+                } else {
+                    todo.isSubtask = '';
+                }
                 return;
             }
         }
     }
 
-    getTodos() {
+    public toggleCompletion(todoId: string) {
+        for (const todo of this.todos) {
+            if (todo.id === todoId) {
+                if (todo.isCompleted === '') {
+                    todo.isCompleted = 'checked';
+                } else {
+                    todo.isCompleted = '';
+                }
+                return;
+            }
+        }
+    }
+
+    public getTodos() {
         return this.todos;
     }
 
-    addTodo(todoOptions: any) {
+    public addTodo(todoOptions: any) {
         // merge the existing todos with the new todo
         const todo = new Todo(todoOptions);
         this.todos.push(todo);
     }
 
-    removeTodo(todoId: string) {
+    public removeTodo(todoId: string) {
         // filter out the target todo
         this.todos = this.todos.filter((todo) => todo.id !== todoId);
     }
