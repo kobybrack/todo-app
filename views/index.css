@@ -8,6 +8,8 @@ input[type="checkbox"] {
 
 input[type="checkbox"]:checked + label {
 	text-decoration: line-through;
+    text-decoration-color: #202020;
+    text-decoration-thickness: 3px;
 }
 
 body {
@@ -28,13 +30,14 @@ ul li {
     padding: 12px;
     text-decoration: none;
     font-size: 18px;
-    color: black;
+    color: white;
     display: block;
     position: relative;
+    overflow-wrap: break-word;
 }
 
 ul li:hover {
-    background-color: #eee;
+    background-color: #696969;
 }
 
 .close {
@@ -46,21 +49,27 @@ ul li:hover {
     transform: translate(0%, -50%);
 }
   
-.close:hover {background: #bbb;}
+.close:hover {background: #505050;}
 
 .subtasktrue {
     padding-left: 4em;
 }
 
-/* label {
-    display: block;
-    pointer-events:none;
-} */
-
 #new-todo-entry {
     font-size: 18px;
+    background-color: #202020;
+    border-color: #A9A9A9;
+    color: white;
+    width: 50%;
+    padding: 8px 16px;
+  margin: 8px 0;
+  box-sizing: border-box;
 }
 
 #new-todo-entry:focus {
-    outline-color: blue;
+    outline-color: #202020;
+}
+
+@media {
+    body { background: 	#202020; color: white; }
 }

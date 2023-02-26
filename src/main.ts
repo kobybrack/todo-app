@@ -20,19 +20,19 @@ const main = () => {
 
     ipcMain.on('add-todo', (_event, todoOptions) => {
         todoList.addTodo(todoOptions);
-        console.log('sending todo1');
+        console.log('adding todo');
         window.webContents.send('todos', todoList.getTodos());
     });
 
     ipcMain.on('remove-todo', (_event, todoId) => {
         todoList.removeTodo(todoId);
-        console.log('sending todo2');
+        console.log('removing todo');
         window.webContents.send('todos', todoList.getTodos());
     });
 
     ipcMain.on('mark-subtask', (_event, todoId) => {
         todoList.toggleSubtask(todoId);
-        console.log('sending todo3');
+        console.log('marking subtask');
         window.webContents.send('todos', todoList.getTodos());
     });
 };

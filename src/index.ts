@@ -4,7 +4,7 @@ import { Todo } from './models/Todo';
 
 const createTodo = (event: any) => {
     if (event.code === 'Enter' && !event.shiftKey) {
-        let todoDescription = (event.target as HTMLInputElement).value;
+        let todoDescription = (event.currentTarget as HTMLInputElement).value;
         if (todoDescription === '') {
             (document.activeElement as HTMLElement).blur();
             return;
@@ -29,14 +29,20 @@ ipcRenderer.on('todos', (_event, todos) => {
     for (const todo of todos) {
         const listElement = $('<li>', {
             id: todo.id,
-            ondblclick: () => ipcRenderer.send('mark-subtask', todo.todoId),
             class: `subtask${todo.isSubtask}`,
         });
-        const label = $(`<label><input type="checkbox">${todo.description}</label>`);
+        listElement.on('dblclick', () => ipcRenderer.send('mark-subtask', todo.id));
+
+        const checkbox = $('<input type="checkbox"/>');
+        const label = $(`<label>${todo.description}</label>`);
         const span = $(`<span class="close">x</span>`);
         span.on('click', () => ipcRenderer.send('remove-todo', todo.id));
-        listElement.append(label, span);
+
+        listElement.append(checkbox, label, span);
         newList.append(listElement);
+    }
+    if (todos.length !== 0) {
+        newList.append('<br>');
     }
     $('#todo-list').replaceWith(newList);
 });
