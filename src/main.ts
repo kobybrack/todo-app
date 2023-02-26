@@ -14,7 +14,6 @@ const todoList = new TodoList(appDataPath);
 const main = () => {
     const window = new Window('views/index.html');
     window.once('show', () => {
-        // todoList.addTodo({ todoDescription: 'test', isSubtask: false });
         window.webContents.send('todos', todoList.getTodos());
     });
 
