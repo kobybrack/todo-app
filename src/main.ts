@@ -14,32 +14,32 @@ const todoList = new TodoList(appDataPath);
 const main = () => {
     const window = new Window('views/index.html');
     window.once('show', () => {
-        window.webContents.send('todos', todoList.getTodos(), todoList.getLastParentId());
+        window.webContents.send('todos', todoList.getTodos(), todoList.getLastParentIndex());
     });
 
     ipcMain.on('add-todo', (_event, todoOptions) => {
         todoList.addTodo(todoOptions);
         console.log('adding todo');
-        window.webContents.send('todos', todoList.getTodos(), todoList.getLastParentId());
+        window.webContents.send('todos', todoList.getTodos(), todoList.getLastParentIndex());
     });
 
-    ipcMain.on('remove-todo', (_event, todoId) => {
-        todoList.removeTodo(todoId);
+    ipcMain.on('remove-todo', (_event, todoIndex) => {
+        todoList.removeTodo(todoIndex);
         console.log('removing todo');
 
-        window.webContents.send('todos', todoList.getTodos(), todoList.getLastParentId());
+        window.webContents.send('todos', todoList.getTodos(), todoList.getLastParentIndex());
     });
 
-    ipcMain.on('toggle-subtask', (_event, todoId) => {
-        todoList.toggleSubtask(todoId);
+    ipcMain.on('toggle-subtask', (_event, todoIndex) => {
+        todoList.toggleSubtask(todoIndex);
         console.log('toggling subtask');
-        window.webContents.send('todos', todoList.getTodos(), todoList.getLastParentId());
+        window.webContents.send('todos', todoList.getTodos(), todoList.getLastParentIndex());
     });
 
-    ipcMain.on('toggle-completion', (_event, todoId) => {
-        todoList.toggleCompletion(todoId);
+    ipcMain.on('toggle-completion', (_event, todoIndex) => {
+        todoList.toggleCompletion(todoIndex);
         console.log('toggling completion');
-        window.webContents.send('todos', todoList.getTodos(), todoList.getLastParentId());
+        window.webContents.send('todos', todoList.getTodos(), todoList.getLastParentIndex());
     });
 };
 

@@ -3,16 +3,14 @@ export class Todo {
     public isSubtask: string;
     public isCompleted: string;
     public description: string;
-    public id: string;
-    public parentId: string;
-    public subtaskIds: string[];
+    public parentIndex: number;
+    public subtaskIndexes: number[];
 
     constructor(options: any) {
         this.isSubtask = options.isSubtask;
         this.description = options.todoDescription;
-        this.parentId = options.parent;
-        this.subtaskIds = [];
+        this.parentIndex = options.parentIndex;
+        this.subtaskIndexes = [];
         this.isCompleted = '';
-        this.id = uuid();
     }
 }

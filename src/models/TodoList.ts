@@ -1,7 +1,7 @@
 import { Todo } from './Todo';
 export class TodoList {
     private todos: Todo[];
-    private lastParentTaskId: string;
+    private lastParentTodoIndex: number;
 
     constructor(appDataPath: string) {
         // initialize with todos or empty array
@@ -14,116 +14,102 @@ export class TodoList {
         //     }
         // }
         this.todos = [];
-        this.lastParentTaskId = '';
+        this.lastParentTodoIndex = -1;
     }
 
     public getTodos() {
         return this.todos;
     }
 
-    public getLastParentId() {
-        return this.lastParentTaskId;
+    public getLastParentIndex() {
+        return this.lastParentTodoIndex;
     }
 
     public addTodo(todoOptions: any) {
-        const todo = new Todo(todoOptions);
-        if (!todo.isSubtask) {
-            this.lastParentTaskId = todo.id;
+        const newTodo = new Todo(todoOptions);
+        if (!newTodo.isSubtask) {
+            this.lastParentTodoIndex = this.todos.length;
         } else {
-            // TODO: Could be that there is no parent task here
-            let i = 0;
-            while (this.todos[i].id !== this.lastParentTaskId) i++;
-            this.todos[i].subtaskIds.push(todo.id);
-        }
-        this.todos.push(todo);
-    }
-
-    public removeTodo(idToRemove: string) {
-        const newTodos: Todo[] = [];
-        let mostRecentParentTaskId = '';
-        for (let i = 0; i < this.todos.length; i++) {
-            const currentTodo = this.todos[i];
-            if (currentTodo.id === idToRemove) {
-                if (currentTodo.id === this.lastParentTaskId) {
-                    // reset last parent task
-                    this.lastParentTaskId = mostRecentParentTaskId;
-
-                    // find previous parent
-                    // TODO: could be that there is no last parent
-                    let j = 0;
-                    while (this.todos[j].id !== mostRecentParentTaskId) j++;
-                    this.todos[j].subtaskIds = [...this.todos[j].subtaskIds, ...currentTodo.subtaskIds];
-                    // reset my children's parent ids to the new parent
-                    for (const childTodoId of this.todos[j].subtaskIds) {
-                        // find child
-                        let k = 0;
-                        while (this.todos[k].id !== childTodoId) k++;
-                        // if their parent is not the new parent, change it
-                        if (this.todos[k].parentId !== this.todos[j].parentId) {
-                            this.todos[k].parentId = this.todos[j].id;
-                        }
-                    }
-                }
-                if (currentTodo.isSubtask) {
-                    // find parent and remove me from their children
-                    let j = 0;
-                    while (this.todos[j].id !== currentTodo.parentId) j++;
-                    this.todos[j].subtaskIds = this.todos[j].subtaskIds.filter((todoId) => todoId !== currentTodo.id);
-                }
-            } else {
-                newTodos.push(currentTodo);
-                if (!currentTodo.isSubtask) {
-                    mostRecentParentTaskId = currentTodo.id;
-                }
+            if (this.lastParentTodoIndex >= 0) {
+                this.todos[this.lastParentTodoIndex].subtaskIndexes.push(this.todos.length);
+                newTodo.parentIndex = this.lastParentTodoIndex;
             }
         }
-        this.todos = newTodos;
+        this.todos.push(newTodo);
     }
 
-    public toggleSubtask(todoId: string) {
-        let mostRecentParentTaskId = '';
-        for (const currentTodo of this.todos) {
-            if (currentTodo.id === todoId) {
-                if (currentTodo.isSubtask) {
-                    currentTodo.isSubtask = '';
-                    let i = 0;
-                    while (this.todos[i].id !== currentTodo.parentId) i++;
-                    // TODO: remove me from the children!
-                    currentTodo.subtaskIds = [...this.todos[i].subtaskIds];
-                    this.todos[i].subtaskIds = [];
-                    currentTodo.parentId = '';
-                } else {
-                    currentTodo.isSubtask = 'subtask';
-                    if (currentTodo.id === this.lastParentTaskId) {
-                        this.lastParentTaskId = mostRecentParentTaskId;
-                    }
-                    // add me and my children to new parent's children
-                    let i = 0;
-                    while (this.todos[i].id !== mostRecentParentTaskId) i++;
-                    this.todos[i].subtaskIds = [...currentTodo.subtaskIds];
-                    this.todos[i].subtaskIds.push(currentTodo.id);
-                    // reset my children because I no longer am a parent task
-                    currentTodo.subtaskIds = [];
-                    currentTodo.parentId = this.todos[i].id;
-                }
-                return;
-            } // implicit else
-            if (!currentTodo.isSubtask) {
-                mostRecentParentTaskId = currentTodo.id;
+    //TODO: update index for all todos after me
+    public removeTodo(indexToRemove: number) {
+        const targetTodo = this.todos[indexToRemove];
+
+        if (targetTodo.isSubtask) {
+            // remove me from my parent's children
+            this.todos[targetTodo.parentIndex].subtaskIndexes.splice(indexToRemove, 1);
+        } else {
+            // it is a parent todo
+            // find new parent for children
+            let newParentIndex = indexToRemove - 1;
+            while (newParentIndex >= 0 && this.todos[newParentIndex].isSubtask) newParentIndex--;
+            if (newParentIndex >= 0) {
+                // found a parent, migrate children
+                const newParent = this.todos[newParentIndex];
+                newParent.subtaskIndexes = [...newParent.subtaskIndexes, ...targetTodo.subtaskIndexes];
+            }
+            for (const subtaskIndex of targetTodo.subtaskIndexes) {
+                this.todos[subtaskIndex].parentIndex = newParentIndex;
+            }
+            if (indexToRemove === this.lastParentTodoIndex) {
+                this.lastParentTodoIndex = newParentIndex;
+            }
+        }
+        this.todos.splice(indexToRemove, 1);
+    }
+
+    public toggleSubtask(indexToToggle: number) {
+        const targetTodo = this.todos[indexToToggle];
+
+        if (targetTodo.isSubtask) {
+            // it is a sub todo going to a parent todo
+            targetTodo.isSubtask = '';
+            // adopt my parent's children who are after me
+            targetTodo.subtaskIndexes = this.todos[targetTodo.parentIndex].subtaskIndexes.filter(
+                (index) => index > indexToToggle,
+            );
+            for (const subtaskIndex of targetTodo.subtaskIndexes) {
+                this.todos[subtaskIndex].parentIndex = indexToToggle;
+            }
+            // remove adopted children from old parent
+            this.todos[targetTodo.parentIndex].subtaskIndexes = this.todos[
+                targetTodo.parentIndex
+            ].subtaskIndexes.filter((index) => index < indexToToggle);
+            targetTodo.parentIndex = -1;
+        } else {
+            // it is a parent todo going to a sub todo
+            targetTodo.isSubtask = 'subtask';
+            let newParentIndex = this.lastParentTodoIndex - 1;
+            while (newParentIndex >= 0 && this.todos[newParentIndex].isSubtask) newParentIndex--;
+            let newParent;
+            if (newParentIndex >= 0) {
+                newParent = this.todos[newParentIndex];
+                newParent.subtaskIndexes.push(indexToToggle);
+            }
+            for (const subtaskIndex of targetTodo.subtaskIndexes) {
+                if (newParent) newParent.subtaskIndexes.push(subtaskIndex);
+                this.todos[subtaskIndex].parentIndex = newParentIndex;
+            }
+            targetTodo.parentIndex = newParentIndex;
+            if (indexToToggle === this.lastParentTodoIndex) {
+                this.lastParentTodoIndex = newParentIndex;
             }
         }
     }
 
-    public toggleCompletion(todoId: string) {
-        for (const todo of this.todos) {
-            if (todo.id === todoId) {
-                if (todo.isCompleted) {
-                    todo.isCompleted = '';
-                } else {
-                    todo.isCompleted = 'checked';
-                }
-                return;
-            }
+    public toggleCompletion(indexToToggle: number) {
+        const targetTodo = this.todos[indexToToggle];
+        if (targetTodo.isCompleted) {
+            targetTodo.isCompleted = '';
+        } else {
+            targetTodo.isCompleted = 'checked';
         }
     }
 }

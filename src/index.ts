@@ -11,41 +11,43 @@ const createTodo = (event: any) => {
         }
 
         let isSubtask = '';
-        let parentId = '';
+        let parentIndex = -1;
         if (todoDescription[0] === ';') {
             todoDescription = todoDescription.slice(1);
             isSubtask = 'subtask';
-            parentId = $('.lastParentTask')[0]?.id || '';
+            const lastParentTaskId = $('.lastParentTodo')[0]?.id;
+            if (lastParentTaskId) parentIndex = Number(lastParentTaskId);
         }
         (event.target as HTMLInputElement).value = '';
-        ipcRenderer.send('add-todo', { todoDescription, isSubtask, parent: parentId });
+        ipcRenderer.send('add-todo', { todoDescription, isSubtask, parentIndex: parentIndex });
     }
 };
 
 $('#new-todo-entry').on('keydown', createTodo);
 
 // on receive todos
-ipcRenderer.on('todos', (_event, todos: Todo[], lastParentTaskId: string) => {
+ipcRenderer.on('todos', (_event, todos: Todo[], lastParentTodoIndex: number) => {
     // get the todoList ul
     const newList = $('<ul>', { id: 'todo-list' });
-    for (const todo of todos) {
-        let isLastParentTask = '';
-        if (todo.id === lastParentTaskId) {
-            isLastParentTask = 'lastParentTask';
+    for (let i = 0; i < todos.length; i++) {
+        const todo = todos[i];
+        let isLastParentTodo = '';
+        if (i === lastParentTodoIndex) {
+            isLastParentTodo = 'lastParentTodo';
         }
         const listElement = $('<li>', {
-            id: todo.id,
-            class: `${todo.isSubtask} ${isLastParentTask}`,
+            id: i,
+            class: `${todo.isSubtask} ${isLastParentTodo}`,
         });
         listElement.on('dblclick', (event) => {
-            if (event.target.localName !== 'input') ipcRenderer.send('toggle-subtask', todo.id);
+            if (event.target.localName !== 'input') ipcRenderer.send('toggle-subtask', i);
         });
 
         const checkbox = $(`<input type="checkbox" ${todo.isCompleted}/>`);
-        checkbox.on('click', () => ipcRenderer.send('toggle-completion', todo.id));
+        checkbox.on('click', () => ipcRenderer.send('toggle-completion', i));
         const label = $(`<label>${todo.description}</label>`);
         const span = $(`<span class="close">X</span>`);
-        span.on('click', () => ipcRenderer.send('remove-todo', todo.id));
+        span.on('click', () => ipcRenderer.send('remove-todo', i));
 
         listElement.append(checkbox, label, span);
         newList.append(listElement);
