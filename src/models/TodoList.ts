@@ -41,28 +41,43 @@ export class TodoList {
     //TODO: update index for all todos after me
     public removeTodo(indexToRemove: number) {
         const targetTodo = this.todos[indexToRemove];
-
         if (targetTodo.isSubtask) {
             // remove me from my parent's children
-            this.todos[targetTodo.parentIndex].subtaskIndexes.splice(indexToRemove, 1);
+            this.todos[targetTodo.parentIndex].subtaskIndexes.pop();
         } else {
-            // it is a parent todo
-            // find new parent for children
+            // it is a parent todo, find new parent
             let newParentIndex = indexToRemove - 1;
             while (newParentIndex >= 0 && this.todos[newParentIndex].isSubtask) newParentIndex--;
-            if (newParentIndex >= 0) {
-                // found a parent, migrate children
-                const newParent = this.todos[newParentIndex];
-                newParent.subtaskIndexes = [...newParent.subtaskIndexes, ...targetTodo.subtaskIndexes];
-            }
+            // update children's parents (if any)
             for (const subtaskIndex of targetTodo.subtaskIndexes) {
                 this.todos[subtaskIndex].parentIndex = newParentIndex;
             }
+            if (newParentIndex >= 0) {
+                // found a parent, migrate children
+                const newParent = this.todos[newParentIndex];
+                targetTodo.subtaskIndexes = targetTodo.subtaskIndexes.map((index) => index - 1);
+                newParent.subtaskIndexes = [...newParent.subtaskIndexes, ...targetTodo.subtaskIndexes];
+            }
+
             if (indexToRemove === this.lastParentTodoIndex) {
                 this.lastParentTodoIndex = newParentIndex;
             }
         }
         this.todos.splice(indexToRemove, 1);
+        let decrementStartingIndex = indexToRemove + 1;
+        while (decrementStartingIndex < this.todos.length && this.todos[decrementStartingIndex].isSubtask) {
+            decrementStartingIndex++;
+        }
+        this.decrementTodoIndexes(decrementStartingIndex);
+    }
+
+    public decrementTodoIndexes(startingIndex: number) {
+        if (startingIndex >= this.todos.length) {
+            return;
+        }
+        this.todos[startingIndex].subtaskIndexes = this.todos[startingIndex].subtaskIndexes.map((index) => index - 1);
+        if (this.todos[startingIndex].parentIndex !== -1) this.todos[startingIndex].parentIndex--;
+        this.decrementTodoIndexes(startingIndex + 1);
     }
 
     public toggleSubtask(indexToToggle: number) {
@@ -82,6 +97,9 @@ export class TodoList {
             this.todos[targetTodo.parentIndex].subtaskIndexes = this.todos[
                 targetTodo.parentIndex
             ].subtaskIndexes.filter((index) => index < indexToToggle);
+            if (targetTodo.parentIndex === this.lastParentTodoIndex) {
+                this.lastParentTodoIndex = indexToToggle;
+            }
             targetTodo.parentIndex = -1;
         } else {
             // it is a parent todo going to a sub todo
@@ -97,6 +115,7 @@ export class TodoList {
                 if (newParent) newParent.subtaskIndexes.push(subtaskIndex);
                 this.todos[subtaskIndex].parentIndex = newParentIndex;
             }
+            targetTodo.subtaskIndexes = [];
             targetTodo.parentIndex = newParentIndex;
             if (indexToToggle === this.lastParentTodoIndex) {
                 this.lastParentTodoIndex = newParentIndex;
