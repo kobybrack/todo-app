@@ -31,7 +31,7 @@ export class TodoList {
             this.lastParentTodoIndex = this.todos.length;
         } else {
             if (this.lastParentTodoIndex >= 0) {
-                this.todos[this.lastParentTodoIndex].subtaskIndexes.push(this.todos.length);
+                this.todos[this.lastParentTodoIndex].subtodoIndexes.push(this.todos.length);
                 newTodo.parentIndex = this.lastParentTodoIndex;
             }
         }
@@ -43,21 +43,22 @@ export class TodoList {
         let removeChildren = false;
         if (targetTodo.isSubtask) {
             // remove me from my parent's children
-            if (targetTodo.parentIndex >= 0) this.todos[targetTodo.parentIndex].subtaskIndexes.pop();
+            if (targetTodo.parentIndex >= 0) this.todos[targetTodo.parentIndex].subtodoIndexes.pop();
         } else {
             // it is a parent todo, find new parent
             let newParentIndex = indexToRemove - 1;
             while (newParentIndex >= 0 && this.todos[newParentIndex].isSubtask) newParentIndex--;
             if (!targetTodo.isCompleted) {
                 // update children's parents (if any)
-                for (const subtaskIndex of targetTodo.subtaskIndexes) {
+                for (const subtaskIndex of targetTodo.subtodoIndexes) {
                     this.todos[subtaskIndex].parentIndex = newParentIndex;
+                    this.todos[subtaskIndex].isCompleted = '';
                 }
                 if (newParentIndex >= 0) {
                     // found a parent, migrate children
                     const newParent = this.todos[newParentIndex];
-                    targetTodo.subtaskIndexes = targetTodo.subtaskIndexes.map((index) => index - 1);
-                    newParent.subtaskIndexes = [...newParent.subtaskIndexes, ...targetTodo.subtaskIndexes];
+                    targetTodo.subtodoIndexes = targetTodo.subtodoIndexes.map((index) => index - 1);
+                    newParent.subtodoIndexes = [...newParent.subtodoIndexes, ...targetTodo.subtodoIndexes];
                 }
             } else {
                 removeChildren = true;
@@ -68,14 +69,14 @@ export class TodoList {
             }
         }
         this.todos.splice(indexToRemove, 1);
-        const decrementStartingIndex = indexToRemove + targetTodo.subtaskIndexes.length;
+        const decrementStartingIndex = indexToRemove + targetTodo.subtodoIndexes.length;
         this.decrementTodoIndexes(decrementStartingIndex);
         if (!targetTodo.isSubtask && indexToRemove > this.lastParentTodoIndex) {
             // since we are removing someone
             this.lastParentTodoIndex--;
         }
         if (removeChildren) {
-            let subtodoCount = targetTodo.subtaskIndexes.length;
+            let subtodoCount = targetTodo.subtodoIndexes.length;
             const removeTimes = subtodoCount;
             for (let i = 0; i < removeTimes; i++) {
                 this.todos.splice(indexToRemove, 1);
@@ -95,7 +96,7 @@ export class TodoList {
             this.lastParentTodoIndex--;
             return;
         }
-        this.todos[startingIndex].subtaskIndexes = this.todos[startingIndex].subtaskIndexes.map((index) => index - 1);
+        this.todos[startingIndex].subtodoIndexes = this.todos[startingIndex].subtodoIndexes.map((index) => index - 1);
         if (this.todos[startingIndex].parentIndex !== -1) this.todos[startingIndex].parentIndex--;
         this.decrementTodoIndexes(startingIndex + 1);
     }
@@ -108,23 +109,23 @@ export class TodoList {
             targetTodo.isSubtask = '';
             // if i have a parent: adopt my parent's children who are after me
             if (targetTodo.parentIndex !== -1) {
-                targetTodo.subtaskIndexes = this.todos[targetTodo.parentIndex].subtaskIndexes.filter(
+                targetTodo.subtodoIndexes = this.todos[targetTodo.parentIndex].subtodoIndexes.filter(
                     (index) => index > indexToToggle,
                 );
                 // remove adopted children from old parent
-                this.todos[targetTodo.parentIndex].subtaskIndexes = this.todos[
+                this.todos[targetTodo.parentIndex].subtodoIndexes = this.todos[
                     targetTodo.parentIndex
-                ].subtaskIndexes.filter((index) => index < indexToToggle);
+                ].subtodoIndexes.filter((index) => index < indexToToggle);
             } else {
                 // go look for children to adopt
                 let subtodoIndex = indexToToggle + 1;
                 while (subtodoIndex < this.todos.length && this.todos[subtodoIndex].isSubtask) {
-                    targetTodo.subtaskIndexes.push(subtodoIndex);
+                    targetTodo.subtodoIndexes.push(subtodoIndex);
                     this.todos[subtodoIndex].parentIndex = indexToToggle;
                     subtodoIndex++;
                 }
             }
-            for (const subtaskIndex of targetTodo.subtaskIndexes) {
+            for (const subtaskIndex of targetTodo.subtodoIndexes) {
                 this.todos[subtaskIndex].parentIndex = indexToToggle;
             }
 
@@ -132,7 +133,7 @@ export class TodoList {
                 this.lastParentTodoIndex = indexToToggle;
             }
             targetTodo.parentIndex = -1;
-        } else {
+        } else if (!targetTodo.isCompleted) {
             // it is a parent todo going to a sub todo
             targetTodo.isSubtask = 'subtask';
             let newParentIndex = indexToToggle - 1;
@@ -140,13 +141,14 @@ export class TodoList {
             let newParent;
             if (newParentIndex >= 0) {
                 newParent = this.todos[newParentIndex];
-                newParent.subtaskIndexes.push(indexToToggle);
+                newParent.subtodoIndexes.push(indexToToggle);
             }
-            for (const subtaskIndex of targetTodo.subtaskIndexes) {
-                if (newParent) newParent.subtaskIndexes.push(subtaskIndex);
+            for (const subtaskIndex of targetTodo.subtodoIndexes) {
+                if (newParent) newParent.subtodoIndexes.push(subtaskIndex);
                 this.todos[subtaskIndex].parentIndex = newParentIndex;
+                this.todos[subtaskIndex].isCompleted = '';
             }
-            targetTodo.subtaskIndexes = [];
+            targetTodo.subtodoIndexes = [];
             targetTodo.parentIndex = newParentIndex;
             if (indexToToggle === this.lastParentTodoIndex) {
                 this.lastParentTodoIndex = newParentIndex;
@@ -158,15 +160,40 @@ export class TodoList {
         const targetTodo = this.todos[indexToToggle];
         if (targetTodo.isCompleted) {
             targetTodo.isCompleted = '';
-            // TODO: if parent vs child
-            for (const subtodoIndex of targetTodo.subtaskIndexes) {
-                this.todos[subtodoIndex].isCompleted = '';
+            if (targetTodo.isSubtask) {
+                if (targetTodo.parentIndex >= 0) {
+                    this.todos[targetTodo.parentIndex].completedCount--;
+                    if (
+                        this.todos[targetTodo.parentIndex].completedCount !==
+                        this.todos[targetTodo.parentIndex].subtodoIndexes.length
+                    ) {
+                        this.todos[targetTodo.parentIndex].isCompleted = '';
+                    }
+                }
+            } else {
+                targetTodo.completedCount = 0;
+                for (const subtodoIndex of targetTodo.subtodoIndexes) {
+                    this.todos[subtodoIndex].isCompleted = '';
+                }
             }
         } else {
             // TODO: if parent vs child
             targetTodo.isCompleted = 'checked';
-            for (const subtodoIndex of targetTodo.subtaskIndexes) {
-                this.todos[subtodoIndex].isCompleted = 'checked';
+            if (targetTodo.isSubtask) {
+                if (targetTodo.parentIndex >= 0) {
+                    this.todos[targetTodo.parentIndex].completedCount++;
+                    if (
+                        this.todos[targetTodo.parentIndex].completedCount ===
+                        this.todos[targetTodo.parentIndex].subtodoIndexes.length
+                    ) {
+                        this.todos[targetTodo.parentIndex].isCompleted = 'checked';
+                    }
+                }
+            } else {
+                targetTodo.completedCount = targetTodo.subtodoIndexes.length;
+                for (const subtodoIndex of targetTodo.subtodoIndexes) {
+                    this.todos[subtodoIndex].isCompleted = 'checked';
+                }
             }
         }
     }
