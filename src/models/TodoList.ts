@@ -27,7 +27,7 @@ export class TodoList {
 
     public addTodo(todoOptions: any) {
         const newTodo = new Todo(todoOptions);
-        if (!newTodo.isSubtask) {
+        if (!newTodo.isSubtodo()) {
             this.lastParentTodoIndex = this.todos.length;
         } else {
             if (this.lastParentTodoIndex >= 0) {
@@ -41,13 +41,13 @@ export class TodoList {
     public removeTodo(indexToRemove: number) {
         const targetTodo = this.todos[indexToRemove];
         let removeChildren = false;
-        if (targetTodo.isSubtask) {
+        if (targetTodo.isSubtodo()) {
             // remove me from my parent's children
             if (targetTodo.parentIndex >= 0) this.todos[targetTodo.parentIndex].subtodoIndexes.pop();
         } else {
             // it is a parent todo, find new parent
             let newParentIndex = indexToRemove - 1;
-            while (newParentIndex >= 0 && this.todos[newParentIndex].isSubtask) newParentIndex--;
+            while (newParentIndex >= 0 && this.todos[newParentIndex].isSubtodo()) newParentIndex--;
             if (!targetTodo.isCompleted) {
                 // update children's parents (if any)
                 for (const subtaskIndex of targetTodo.subtodoIndexes) {
@@ -71,7 +71,7 @@ export class TodoList {
         this.todos.splice(indexToRemove, 1);
         const decrementStartingIndex = indexToRemove + targetTodo.subtodoIndexes.length;
         this.decrementTodoIndexes(decrementStartingIndex);
-        if (!targetTodo.isSubtask && indexToRemove > this.lastParentTodoIndex) {
+        if (!targetTodo.isSubtodo() && indexToRemove > this.lastParentTodoIndex) {
             // since we are removing someone
             this.lastParentTodoIndex--;
         }
@@ -82,7 +82,7 @@ export class TodoList {
                 this.todos.splice(indexToRemove, 1);
                 const decrementStartingIndex = indexToRemove + subtodoCount - 1;
                 this.decrementTodoIndexes(decrementStartingIndex);
-                if (!targetTodo.isSubtask && indexToRemove > this.lastParentTodoIndex) {
+                if (!targetTodo.isSubtodo() && indexToRemove > this.lastParentTodoIndex) {
                     // since we are removing someone
                     this.lastParentTodoIndex--;
                 }
@@ -104,9 +104,9 @@ export class TodoList {
     public toggleSubtask(indexToToggle: number) {
         const targetTodo = this.todos[indexToToggle];
 
-        if (targetTodo.isSubtask) {
+        if (targetTodo.isSubtodo()) {
             // it is a sub todo going to a parent todo
-            targetTodo.isSubtask = '';
+            targetTodo.subtodo = '';
             // if i have a parent: adopt my parent's children who are after me
             if (targetTodo.parentIndex !== -1) {
                 targetTodo.subtodoIndexes = this.todos[targetTodo.parentIndex].subtodoIndexes.filter(
@@ -119,7 +119,7 @@ export class TodoList {
             } else {
                 // go look for children to adopt
                 let subtodoIndex = indexToToggle + 1;
-                while (subtodoIndex < this.todos.length && this.todos[subtodoIndex].isSubtask) {
+                while (subtodoIndex < this.todos.length && this.todos[subtodoIndex].isSubtodo()) {
                     targetTodo.subtodoIndexes.push(subtodoIndex);
                     this.todos[subtodoIndex].parentIndex = indexToToggle;
                     subtodoIndex++;
@@ -135,9 +135,9 @@ export class TodoList {
             targetTodo.parentIndex = -1;
         } else if (!targetTodo.isCompleted) {
             // it is a parent todo going to a sub todo
-            targetTodo.isSubtask = 'subtask';
+            targetTodo.subtodo = 'subtask';
             let newParentIndex = indexToToggle - 1;
-            while (newParentIndex >= 0 && this.todos[newParentIndex].isSubtask) newParentIndex--;
+            while (newParentIndex >= 0 && this.todos[newParentIndex].isSubtodo()) newParentIndex--;
             let newParent;
             if (newParentIndex >= 0) {
                 newParent = this.todos[newParentIndex];
@@ -160,7 +160,7 @@ export class TodoList {
         const targetTodo = this.todos[indexToToggle];
         if (targetTodo.isCompleted) {
             targetTodo.isCompleted = '';
-            if (targetTodo.isSubtask) {
+            if (targetTodo.isSubtodo()) {
                 if (targetTodo.parentIndex >= 0) {
                     this.todos[targetTodo.parentIndex].completedCount--;
                     if (
@@ -179,7 +179,7 @@ export class TodoList {
         } else {
             // TODO: if parent vs child
             targetTodo.isCompleted = 'checked';
-            if (targetTodo.isSubtask) {
+            if (targetTodo.isSubtodo()) {
                 if (targetTodo.parentIndex >= 0) {
                     this.todos[targetTodo.parentIndex].completedCount++;
                     if (

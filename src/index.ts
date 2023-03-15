@@ -10,7 +10,7 @@ const createTodo = (event: any) => {
             return;
         }
 
-        let isSubtask = '';
+        let isSubtask = 'parent';
         let parentIndex = -1;
         if (todoDescription[0] === ';') {
             todoDescription = todoDescription.slice(1);
@@ -21,6 +21,17 @@ const createTodo = (event: any) => {
         (event.target as HTMLInputElement).value = '';
         ipcRenderer.send('add-todo', { todoDescription, isSubtask, parentIndex: parentIndex });
     }
+};
+
+const reorderTodo = (event: any) => {
+    event.preventDefault();
+    const todoToReorder = $('.dragging')[0];
+    console.log(todoToReorder);
+    console.log('here!');
+};
+
+const isSubtodo = (todo: Todo) => {
+    return todo.subtodo === 'subtask';
 };
 
 $('#new-todo-entry').on('keydown', createTodo);
@@ -37,11 +48,15 @@ ipcRenderer.on('todos', (_event, todos: Todo[], lastParentTodoIndex: number) => 
         }
         const listElement = $('<li>', {
             id: i,
-            class: `${todo.isSubtask} ${isLastParentTodo}`,
+            class: `${todo.subtodo} ${isLastParentTodo}`,
         });
         listElement.on('dblclick', (event) => {
             if (event.target.localName !== 'input') ipcRenderer.send('toggle-subtask', i);
         });
+        if (!isSubtodo(todo)) {
+            listElement.on('dragstart', () => setTimeout(() => listElement.addClass('dragging'), 0));
+            listElement.on('dragend', () => console.log('hey'));
+        }
 
         const checkbox = $(`<input type="checkbox" ${todo.isCompleted}/>`);
         checkbox.on('click', () => ipcRenderer.send('toggle-completion', i));
@@ -56,4 +71,6 @@ ipcRenderer.on('todos', (_event, todos: Todo[], lastParentTodoIndex: number) => 
         newList.append('<br>');
     }
     $('#todo-list').replaceWith(newList);
+    $('#todo-list').on('dragover', reorderTodo);
+    $('#todo-list').on('dragenter', (e) => e.preventDefault());
 });
