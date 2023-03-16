@@ -4,7 +4,7 @@ import { BrowserWindow } from 'electron';
 
 // default window settings
 const defaultProps = {
-    width: 750,
+    width: 1500,
     height: 750,
     show: false,
     autoHideMenuBar: true,
@@ -21,7 +21,7 @@ export class Window extends BrowserWindow {
         super({ ...defaultProps });
 
         this.loadFile(file);
-        // this.webContents.openDevTools();
+        this.webContents.openDevTools();
 
         // gracefully show when ready to prevent flickering
         this.once('ready-to-show', () => {

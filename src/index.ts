@@ -1,6 +1,8 @@
 import { ipcRenderer } from 'electron';
-import $ from 'jquery';
 import { Todo } from './models/Todo';
+
+window.$ = window.jQuery = require('jquery');
+import 'jqueryui';
 
 const createTodo = (event: any) => {
     if (event.code === 'Enter' && !event.shiftKey) {
@@ -10,7 +12,7 @@ const createTodo = (event: any) => {
             return;
         }
 
-        let isSubtask = 'parent';
+        let isSubtask = '';
         let parentIndex = -1;
         if (todoDescription[0] === ';') {
             todoDescription = todoDescription.slice(1);
@@ -23,15 +25,9 @@ const createTodo = (event: any) => {
     }
 };
 
-const reorderTodo = (event: any) => {
-    event.preventDefault();
-    const todoToReorder = $('.dragging')[0];
-    console.log(todoToReorder);
-    console.log('here!');
-};
-
-const isSubtodo = (todo: Todo) => {
-    return todo.subtodo === 'subtask';
+const reorderTodo = () => {
+    const newOrder = $('#todo-list').sortable('toArray');
+    console.log(newOrder);
 };
 
 $('#new-todo-entry').on('keydown', createTodo);
@@ -51,12 +47,9 @@ ipcRenderer.on('todos', (_event, todos: Todo[], lastParentTodoIndex: number) => 
             class: `${todo.subtodo} ${isLastParentTodo}`,
         });
         listElement.on('dblclick', (event) => {
+            console.log('triggered!');
             if (event.target.localName !== 'input') ipcRenderer.send('toggle-subtask', i);
         });
-        if (!isSubtodo(todo)) {
-            listElement.on('dragstart', () => setTimeout(() => listElement.addClass('dragging'), 0));
-            listElement.on('dragend', () => console.log('hey'));
-        }
 
         const checkbox = $(`<input type="checkbox" ${todo.isCompleted}/>`);
         checkbox.on('click', () => ipcRenderer.send('toggle-completion', i));
@@ -71,6 +64,8 @@ ipcRenderer.on('todos', (_event, todos: Todo[], lastParentTodoIndex: number) => 
         newList.append('<br>');
     }
     $('#todo-list').replaceWith(newList);
-    $('#todo-list').on('dragover', reorderTodo);
-    $('#todo-list').on('dragenter', (e) => e.preventDefault());
+    $('#todo-list').sortable({
+        cancel: '.subtask',
+        stop: reorderTodo,
+    });
 });

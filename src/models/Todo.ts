@@ -1,4 +1,3 @@
-import { v4 as uuid } from 'uuid';
 export class Todo {
     public subtodo: string;
     public isCompleted: string;
@@ -6,9 +5,6 @@ export class Todo {
     public parentIndex: number;
     public subtodoIndexes: number[];
     public completedCount: number;
-    public isSubtodo() {
-        return this.subtodo === 'subtask';
-    }
 
     constructor(options: any) {
         this.subtodo = options.isSubtask;
